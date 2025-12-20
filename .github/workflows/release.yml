@@ -55,17 +55,6 @@ jobs:
           remove_haskell: true
           remove_tool_cache: true
           rm_cmd: "rmz" # Faster cleanup
-      - name: Check if `magisk-preinit-device` is set when `root` is true
-        run: |
-          # Convert inputs to proper boolean values
-          root=${{ github.event.inputs.root }}
-          magisk_preinit_device=${{ github.event.inputs.magisk-preinit-device }}
-
-          # Ensure that the boolean comparison is correctly handled
-          if [ "$root" == "true" ] && [ -z "$magisk_preinit_device" ]; then
-            echo -e "::error:: magisk-preinit-device is required when root is true."
-            exit 1
-          fi
 
       - name: Checkout code
         uses: actions/checkout@v6
@@ -81,6 +70,20 @@ jobs:
 
           echo "DEVICE_NAME=${DEVICE_NAME}" >> $GITHUB_ENV
           echo "GRAPHENEOS_UPDATE_CHANNEL=${GRAPHENEOS[UPDATE_CHANNEL]}" >> $GITHUB_ENV
+          echo "ADDITIONALS_ROOT=${ADDITIONALS_ROOT}" >> $GITHUB_ENV
+          echo "MAGISK_PREINIT=${MAGISK_PREINIT}" >> $GITHUB_ENV
+
+      - name: Check if `magisk-preinit-device` is set when `root` is true
+        run: |
+          # Convert inputs to proper boolean values (prefer inputs over env for scheduled runs)
+          root="${{ github.event.inputs.root || env.ADDITIONALS_ROOT }}"
+          magisk_preinit_device="${{ github.event.inputs.magisk-preinit-device || env.MAGISK_PREINIT }}"
+
+          # Ensure that the boolean comparison is correctly handled
+          if [ "$root" == "true" ] && [ -z "$magisk_preinit_device" ]; then
+            echo -e "::error:: magisk-preinit-device is required when root is true."
+            exit 1
+          fi
 
       - name: Set GrapheneOS version
         shell: bash
@@ -100,7 +103,8 @@ jobs:
         if: github.event_name == 'schedule' || github.event.inputs.release-type == 'default'
         run: |
           # Determine if the build is based on magisk or rootless (build flavor)
-          build_flavor=$([[ ${{ github.event.inputs.root == 'true' }} == 'true' ]] && echo 'magisk' || echo 'rootless')
+          root="${{ github.event.inputs.root || env.ADDITIONALS_ROOT || 'false' }}"
+          build_flavor=$([[ "$root" == 'true' ]] && echo 'magisk' || echo 'rootless')
 
           # Check if the tag exists
           if git show-ref --tags $GRAPHENEOS_VERSION --quiet; then
@@ -190,9 +194,9 @@ jobs:
       - name: Patch OTA
         shell: bash
         env:
-          ADDITIONALS_ROOT: ${{ github.event.inputs.root }}
+          ADDITIONALS_ROOT: ${{ github.event.inputs.root || env.ADDITIONALS_ROOT || 'false' }}
           CLEANUP: true
-          MAGISK_PREINIT: ${{ github.event.inputs.magisk-preinit-device }}
+          MAGISK_PREINIT: ${{ github.event.inputs.magisk-preinit-device || env.MAGISK_PREINIT }}
           PASSPHRASE_AVB: ${{ secrets.PASSPHRASE_AVB }}
           PASSPHRASE_OTA: ${{ secrets.PASSPHRASE_OTA }}
         run: |
@@ -229,7 +233,7 @@ jobs:
         run: |
           CURRENT_COMMIT=$(git rev-parse --short HEAD)
           FLAVOR=("magisk" "rootless")
-          root=${{ github.event.inputs.root }}
+          root="${{ github.event.inputs.root || env.ADDITIONALS_ROOT || 'false' }}"
 
           # Create `magisk` and `rootless` directories if they don't exist
           mkdir -p "${FLAVOR}"
