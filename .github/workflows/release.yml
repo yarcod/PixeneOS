@@ -47,14 +47,6 @@ jobs:
     permissions: write-all
 
     steps:
-      - name: Free Disk Space for Docker
-        uses: endersonmenezes/free-disk-space@v3
-        with:
-          remove_android: true
-          remove_dotnet: true
-          remove_haskell: true
-          remove_tool_cache: true
-          rm_cmd: "rmz" # Faster cleanup
       - name: Check if `magisk-preinit-device` is set when `root` is true
         run: |
           # Convert inputs to proper boolean values
