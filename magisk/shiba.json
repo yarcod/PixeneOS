@@ -1,7 +1,7 @@
 {
   "version": 2,
   "full": {
-    "location_ota": "https://github.com/yarcod/PixeneOS/releases/download/2026091000/shiba-2026091000-magisk-v31.0-3-6ec788d.zip",
-    "location_csig": "https://github.com/yarcod/PixeneOS/releases/download/2026091000/shiba-2026091000-magisk-v31.0-3-6ec788d.zip.csig"
+    "location_ota": "https://github.com/yarcod/PixeneOS/releases/download/2026091900/shiba-2026091900-magisk-v31.0-3-c8e52f0.zip",
+    "location_csig": "https://github.com/yarcod/PixeneOS/releases/download/2026091900/shiba-2026091900-magisk-v31.0-3-c8e52f0.zip.csig"
   }
 }
